@@ -232,6 +232,15 @@ Edit the voice selector in `templates/index.html` and update the `DeescalationAg
 - Email notifications when processing completes
 - WebSocket support for lower latency updates
 
+## Deployment
+
+For deployment to production servers, see the comprehensive [DEPLOYMENT.md](DEPLOYMENT.md) guide which covers:
+- Docker deployment (easiest)
+- Render.com (recommended for cloud)
+- VPS setup with Nginx (best for production)
+- Railway deployment
+- Production configuration and security
+
 ## Support
 
 For issues or questions:
