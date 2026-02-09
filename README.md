@@ -1,176 +1,243 @@
-# Road Rage POC
+# Road Rage Assitance
 
-Proof of concept for detecting road rage from dashcam footage using Gemini Flash Vision and providing real-time de-escalation guidance.
+A modern web interface for the AI-powered Road Rage Assitance. The goal of this application is to provide real time assistance to drivers in case of emergency situations. For real-world use case, the app needs to be extended to a deployment ready version for dashcams where it can provide real time assistance. The purpose of the webapp is to demonstrate the capabilities of the application. 
 
-## Components
+## Features
 
-### 1. **Perception Agent** (`src/gemini_fact_extraction.py`)
-- Analyzes dashcam video and audio
-- Detects road rage threats and behaviors
-- Outputs structured threat assessments
-- Model: `gemini-2.5-flash`
+- **Video Upload**: Easy drag-and-drop interface for dashcam videos
+- **Real-time Processing**: Live updates as each agent completes its analysis
+- **Three-Stage Pipeline**:
+  1. **Perception Agent**: Analyzes video for road rage incidents
+  2. **De-escalation Agent**: Generates audio safety guidance
+  3. **Post-Incident Report**: Creates comprehensive documentation
+- **Interactive Results**: View incidents, listen to audio guidance, and download reports
+- **Beautiful UI**: Modern, responsive design with progress tracking
 
-### 2. **De-escalation Agent** (`src/deescalation_agent.py`)
-- Converts threat assessments into audio safety guidance
-- Provides calm, actionable instructions to drivers
-- Real-time de-escalation protocols
-- Model: `gemini-2.5-flash-preview-tts`
-- Voice options: **Puck** (recommended), Aoede, Charon, Kore
-- Audio quality: See [Audio Quality Guide](docs/AUDIO_QUALITY_GUIDE.md)
+## Prerequisites
 
-### 3. **Post-Incident Agent** (`src/post_incident_agent.py`)
-- Generates comprehensive incident reports
-- Creates detailed timeline of events
-- Produces police-ready neutral reports
-- Model: `gemini-2.5-flash`
-- Combines perception data and de-escalation guidance
+- Python 3.8+
+- `ffmpeg` and `ffprobe` (for video processing)
+- Google Gemini API key
 
-### 4. **Pipeline** (`src/pipeline.py`) ⭐ NEW
-- Orchestrates all three agents in sequence
-- Automated workflow: Perception → De-escalation → Post-Incident
-- Supports full pipeline or partial runs
-- Saves all outputs (JSON, audio, reports)
+## Installation
 
-## Quick Start
+1. **Install Python dependencies**:
+   ```bash
+   conda activate zutec
+   pip install -r requirements.txt
+   ```
 
-### Setup
+2. **Set up environment variables**:
+   Create a `.env` file in the project root:
+   ```
+   GEMINI_API_KEY=your_api_key_here
+   ```
 
-```bash
-# Activate environment
-conda activate zutec
+3. **Install ffmpeg** (if not already installed):
+   ```bash
+   # Ubuntu/Debian
+   sudo apt install ffmpeg
+   
+   # macOS
+   brew install ffmpeg
+   ```
 
-# Install dependencies
-pip install -r requirements.txt
+## Running the Web Application
 
-# Configure API key
-echo "GOOGLE_API_KEY=your_key_here" > .env
+1. **Activate your conda environment**:
+   ```bash
+   conda activate zutec
+   ```
+
+2. **Start the Flask server**:
+   ```bash
+   python app.py
+   ```
+
+3. **Open your browser**:
+   Navigate to `http://localhost:5000`
+
+## Usage
+
+1. **Upload a Video**:
+   - Click "Choose video file" or drag and drop a dashcam video
+   - Supported formats: MP4, AVI, MOV, MKV, WEBM
+   - Select your preferred audio voice for guidance
+   - Click "Start Analysis"
+
+2. **Monitor Progress**:
+   - Watch real-time updates as each agent processes the video
+   - View activity log for detailed progress
+   - See incidents as they're detected
+
+3. **Review Results**:
+   - **Threat Assessment**: View all detected incidents with threat levels
+   - **Safety Guidance**: Read transcripts and listen to audio guidance
+   - **Post-Incident Report**: Download comprehensive reports
+
+## API Endpoints
+
+### Upload Video
+```
+POST /upload
+Form Data:
+  - video: Video file
+  - voice: Voice name (Puck, Aoede, Kore, Charon)
+Returns:
+  - job_id: Unique identifier for the processing job
 ```
 
-### Web Application (NEW! 🎉)
-
-**Easy-to-use web interface with real-time progress updates!**
-
-```bash
-# Start the web application
-./start_webapp.sh
-
-# Or manually:
-conda activate zutec
-python app.py
+### Progress Stream
+```
+GET /progress/<job_id>
+Returns: Server-Sent Events stream with real-time updates
 ```
 
-Then open your browser to `http://localhost:5000` and upload your dashcam video!
-
-Features:
-- 📹 Drag-and-drop video upload
-- ⚡ Real-time processing updates
-- 🎙️ Audio guidance playback
-- 📊 Interactive results display
-- 📥 Download reports and audio files
-
-**See [WEB_APP_README.md](WEB_APP_README.md) for detailed documentation.**
-
-### Run Complete Pipeline (Command Line)
-
-```bash
-# Run all three agents in sequence
-python run_pipeline.py
-
-# Or use the pipeline module directly
-python src/pipeline.py --mode full
-
-# Run from existing perception data (skip video analysis)
-python src/pipeline.py --mode from-perception --perception-file results/gemini-2.5-flash_road_rage_analysis_fps1.json
+### Get Job Status
+```
+GET /status/<job_id>
+Returns: Current status and progress of the job
 ```
 
-### Run Individual Agents
-
-```bash
-# 1. Perception Agent (video analysis)
-python src/gemini_fact_extraction.py
-
-# 2. De-escalation Agent (audio guidance)
-python src/deescalation_agent.py
-
-# 3. Post-Incident Agent (reports)
-python src/post_incident_agent.py
+### Get Results
+```
+GET /results/<job_id>
+Returns: Complete analysis results (when job is finished)
 ```
 
-## Documentation
-
-- **[Web Application Guide](WEB_APP_README.md)** - Web interface setup and usage 🎉 NEW
-- **[Pipeline Overview](PIPELINE_OVERVIEW.md)** - System architecture and complete workflow ⭐ START HERE
-- [Pipeline Guide](docs/PIPELINE_GUIDE.md) - Complete pipeline usage and configuration
-- [De-escalation Agent Guide](docs/DEESCALATION_AGENT.md) - Comprehensive usage and system prompt documentation
-- [Audio Quality Guide](docs/AUDIO_QUALITY_GUIDE.md) - Fix unclear audio, test voices
-- [System Prompt Design](docs/SYSTEM_PROMPT_DESIGN.md) - Design philosophy and principles
-- [API Migration Guide](docs/API_MIGRATION.md) - New Google Genai API changes
-- [Quick Start](QUICKSTART.md) - 5-minute setup guide
-
-## Complete Pipeline Workflow
-
+### Download File
 ```
-Dashcam Video → Perception Agent → Threat Assessment (JSON)
-                                           ↓
-                                  De-escalation Agent
-                                           ↓
-                                  Audio Safety Guidance (WAV + TXT)
-                                           ↓
-                                  Post-Incident Agent
-                                           ↓
-                     Comprehensive Reports (Summary, Timeline, Police Report)
+GET /download/<job_id>/<path>
+Returns: Audio file or report document
 ```
 
-## Example Output
-
-**Perception Agent Output:**
-```json
-{
-  "overall_threat_level": "High",
-  "incidents": [{
-    "threat_type": "approaching_person",
-    "threat_level": "High",
-    "recommended_action": "lock_doors"
-  }]
-}
+### List Jobs
+```
+GET /jobs
+Returns: List of all processing jobs
 ```
 
-**De-escalation Agent Audio Guidance:**
-> "Lock your doors now. Stay inside your vehicle. Keep your hands on the wheel. Start recording if you can safely reach your phone. Do not engage."
+## Architecture
 
-**Post-Incident Agent Report:**
-- Incident summary with key events
-- Detailed timeline with timestamps
-- Police-ready neutral report format
+### Backend (Flask)
+- **app.py**: Main web server and API endpoints
+- **JobProgress**: Tracks processing state and streams updates
+- **Background Processing**: Asynchronous video analysis
 
-## Project Structure
+### Frontend
+- **HTML/CSS/JS**: Modern, responsive single-page application
+- **Server-Sent Events**: Real-time progress updates
+- **Dynamic Results**: Updates UI as agents complete
+
+### Pipeline
+- **Perception Agent**: Gemini-powered video analysis
+- **De-escalation Agent**: TTS audio guidance generation
+- **Post-Incident Agent**: Comprehensive report creation
+
+## File Structure
 
 ```
 road_rage_poc/
-├── app.py                         # Flask web application 🎉 NEW
-├── start_webapp.sh                # Web app startup script 🎉 NEW
+├── app.py                      # Flask web application
 ├── templates/
-│   └── index.html                 # Web interface
+│   └── index.html             # Main web interface
 ├── static/
-│   ├── css/style.css              # UI styles
-│   └── js/app.js                  # Frontend JavaScript
+│   ├── css/
+│   │   └── style.css          # UI styles
+│   └── js/
+│       └── app.js             # Frontend logic
 ├── src/
+│   ├── pipeline.py            # Pipeline orchestration
 │   ├── gemini_fact_extraction.py  # Perception agent
-│   ├── deescalation_agent.py      # De-escalation agent
-│   ├── deescalation_prompt.py     # De-escalation system prompt
-│   ├── post_incident_agent.py     # Post-incident report generator
-│   ├── post_incident_prompt.py    # Post-incident system prompt
-│   ├── pipeline.py                # Complete pipeline orchestrator ⭐
-│   └── prompts.py                 # Perception prompts
-├── uploads/                       # Uploaded videos (web app)
-├── results/
-│   ├── *.json                     # Threat assessments
-│   ├── audio/                     # Generated audio guidance
-│   └── reports/                   # Post-incident reports
-├── docs/
-│   └── DEESCALATION_AGENT.md      # Full documentation
-├── run_pipeline.py                # Simple pipeline runner ⭐
-├── WEB_APP_README.md              # Web application documentation 🎉
-├── requirements.txt
-└── README.md
+│   ├── deescalation_agent.py # De-escalation agent
+│   └── post_incident_agent.py # Report generation
+├── uploads/                    # Uploaded videos (by job ID)
+└── results/                    # Analysis outputs (by job ID)
+    ├── audio/                 # Generated audio guidance
+    └── reports/               # Post-incident reports
 ```
+
+## Configuration
+
+### Voice Options
+- **Puck**: Clear male voice (recommended)
+- **Aoede**: Clear female voice
+- **Kore**: Professional female voice (default)
+- **Charon**: Deep male voice
+
+### Video Processing
+- Maximum file size: 500MB
+- Supported formats: MP4, AVI, MOV, MKV, WEBM
+- Processing time: ~2-5 minutes for typical dashcam footage
+
+## Troubleshooting
+
+### Video Upload Fails
+- Check file size (max 500MB)
+- Verify video format is supported
+- Ensure enough disk space
+
+### Processing Hangs
+- Check API key is valid
+- Verify ffmpeg is installed
+- Check activity log for errors
+
+### Audio Not Playing
+- Ensure browser supports WAV audio
+- Check audio file was generated (look in activity log)
+- Try downloading the audio file directly
+
+### No Results Displayed
+- Wait for all agents to complete
+- Check browser console for JavaScript errors
+- Refresh the page and check job status
+
+## Development
+
+### Running in Debug Mode
+```bash
+# The app.py already runs in debug mode by default
+python app.py
+```
+
+### Adding Custom Voices
+Edit the voice selector in `templates/index.html` and update the `DeescalationAgent` in `src/deescalation_agent.py`.
+
+### Modifying UI
+- Styles: `static/css/style.css`
+- JavaScript: `static/js/app.js`
+- HTML: `templates/index.html`
+
+## Security Considerations
+
+- Files are stored with unique job IDs to prevent conflicts
+- File extensions are validated before upload
+- No authentication is implemented (add for production use)
+- Consider adding rate limiting for production deployment
+
+## Performance Tips
+
+1. **Shorter videos process faster**: Consider splitting long videos
+2. **Lower quality videos**: Reduce file size without losing detection accuracy
+3. **Batch processing**: Process multiple videos by opening multiple tabs
+4. **Clean up old jobs**: Periodically delete old upload and result folders
+
+## Future Enhancements
+
+- User authentication
+- Job history and search
+- Video preview before upload
+- Real-time video progress indicator
+- Export results as PDF
+- Email notifications when processing completes
+- WebSocket support for lower latency updates
+
+## Support
+
+For issues or questions:
+1. Check the activity log for detailed error messages
+2. Verify all dependencies are installed
+3. Ensure your Gemini API key has sufficient quota
+4. Check the terminal output for backend errors
+
+
