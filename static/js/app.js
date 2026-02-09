@@ -246,18 +246,45 @@ function addGuidanceResult(data) {
     
     const guidanceDiv = document.createElement('div');
     guidanceDiv.className = 'guidance-item';
+    
+    const audioUrl = `/download/${currentJobId}/${data.audio_path}`;
+    console.log('Audio URL:', audioUrl, 'Path:', data.audio_path); // Debug log
+    
     guidanceDiv.innerHTML = `
         <div class="guidance-header">
             <h4>Incident ${data.incident_id}</h4>
         </div>
         <div class="guidance-text">${data.guidance_text}</div>
         ${data.audio_path ? `
-            <audio controls class="audio-player">
-                <source src="/download/${currentJobId}/${data.audio_path.split('/').slice(-2).join('/')}" type="audio/wav">
+            <audio controls class="audio-player" preload="metadata">
+                <source src="${audioUrl}" type="audio/wav">
                 Your browser does not support the audio element.
             </audio>
+            <div class="audio-download">
+                <a href="${audioUrl}" download class="download-link">
+                    📥 Download Audio
+                </a>
+            </div>
         ` : ''}
     `;
+    
+    // Add error handling for audio element
+    if (data.audio_path) {
+        setTimeout(() => {
+            const audioElement = guidanceDiv.querySelector('audio');
+            if (audioElement) {
+                audioElement.addEventListener('error', function(e) {
+                    console.error('Audio playback error:', e);
+                    console.error('Audio source:', audioUrl);
+                    addActivity(`⚠️ Audio playback error for incident ${data.incident_id}. Try downloading instead.`, 'warning');
+                });
+                
+                audioElement.addEventListener('loadedmetadata', function() {
+                    console.log('Audio loaded successfully:', audioUrl);
+                });
+            }
+        }, 100);
+    }
     
     guidanceList.appendChild(guidanceDiv);
 }

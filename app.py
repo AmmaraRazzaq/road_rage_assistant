@@ -80,10 +80,22 @@ class JobProgress:
     
     def add_deescalation_result(self, incident_id, guidance, audio_path):
         """Store de-escalation agent result"""
+        # Convert absolute path to relative path (relative to results/job_id/)
+        relative_audio_path = None
+        if audio_path:
+            audio_path = Path(audio_path)
+            # Extract just the filename part relative to job results folder
+            # e.g., "audio/incident_1_guidance.wav"
+            try:
+                relative_audio_path = str(audio_path.relative_to(app.config['RESULTS_FOLDER'] / self.job_id))
+            except ValueError:
+                # Fallback: just use the last two parts of the path
+                relative_audio_path = '/'.join(audio_path.parts[-2:])
+        
         result = {
             'incident_id': incident_id,
             'guidance_text': guidance.get('text', ''),
-            'audio_path': str(audio_path) if audio_path else None
+            'audio_path': relative_audio_path
         }
         self.deescalation_results.append(result)
         self.update('deescalation_complete', result)
@@ -416,7 +428,12 @@ def download_file(job_id, filename):
     if not file_path.exists():
         return jsonify({'error': 'File not found'}), 404
     
-    return send_file(str(file_path), as_attachment=True)
+    # Determine if it's audio or a downloadable file
+    # For audio files, don't force download so they can play inline
+    if file_path.suffix == '.wav':
+        return send_file(str(file_path), mimetype='audio/wav', as_attachment=False)
+    else:
+        return send_file(str(file_path), as_attachment=True)
 
 
 @app.route('/jobs')
