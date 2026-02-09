@@ -38,7 +38,7 @@ uploadForm.addEventListener('submit', async (e) => {
     
     const formData = new FormData();
     formData.append('video', file);
-    formData.append('voice', document.getElementById('voiceSelect').value);
+    formData.append('voice', 'Puck'); // Default voice
     
     // Disable upload button
     uploadBtn.disabled = true;
