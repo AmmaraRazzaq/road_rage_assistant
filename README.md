@@ -46,7 +46,31 @@ pip install -r requirements.txt
 echo "GOOGLE_API_KEY=your_key_here" > .env
 ```
 
-### Run Complete Pipeline (Recommended)
+### Web Application (NEW! 🎉)
+
+**Easy-to-use web interface with real-time progress updates!**
+
+```bash
+# Start the web application
+./start_webapp.sh
+
+# Or manually:
+conda activate zutec
+python app.py
+```
+
+Then open your browser to `http://localhost:5000` and upload your dashcam video!
+
+Features:
+- 📹 Drag-and-drop video upload
+- ⚡ Real-time processing updates
+- 🎙️ Audio guidance playback
+- 📊 Interactive results display
+- 📥 Download reports and audio files
+
+**See [WEB_APP_README.md](WEB_APP_README.md) for detailed documentation.**
+
+### Run Complete Pipeline (Command Line)
 
 ```bash
 # Run all three agents in sequence
@@ -74,6 +98,7 @@ python src/post_incident_agent.py
 
 ## Documentation
 
+- **[Web Application Guide](WEB_APP_README.md)** - Web interface setup and usage 🎉 NEW
 - **[Pipeline Overview](PIPELINE_OVERVIEW.md)** - System architecture and complete workflow ⭐ START HERE
 - [Pipeline Guide](docs/PIPELINE_GUIDE.md) - Complete pipeline usage and configuration
 - [De-escalation Agent Guide](docs/DEESCALATION_AGENT.md) - Comprehensive usage and system prompt documentation
@@ -122,6 +147,13 @@ Dashcam Video → Perception Agent → Threat Assessment (JSON)
 
 ```
 road_rage_poc/
+├── app.py                         # Flask web application 🎉 NEW
+├── start_webapp.sh                # Web app startup script 🎉 NEW
+├── templates/
+│   └── index.html                 # Web interface
+├── static/
+│   ├── css/style.css              # UI styles
+│   └── js/app.js                  # Frontend JavaScript
 ├── src/
 │   ├── gemini_fact_extraction.py  # Perception agent
 │   ├── deescalation_agent.py      # De-escalation agent
@@ -130,6 +162,7 @@ road_rage_poc/
 │   ├── post_incident_prompt.py    # Post-incident system prompt
 │   ├── pipeline.py                # Complete pipeline orchestrator ⭐
 │   └── prompts.py                 # Perception prompts
+├── uploads/                       # Uploaded videos (web app)
 ├── results/
 │   ├── *.json                     # Threat assessments
 │   ├── audio/                     # Generated audio guidance
@@ -137,6 +170,7 @@ road_rage_poc/
 ├── docs/
 │   └── DEESCALATION_AGENT.md      # Full documentation
 ├── run_pipeline.py                # Simple pipeline runner ⭐
+├── WEB_APP_README.md              # Web application documentation 🎉
 ├── requirements.txt
 └── README.md
 ```

@@ -2,6 +2,9 @@
 google-genai>=1.0.0
 python-dotenv>=1.0.0
 
+# Web framework
+Flask>=3.0.0
+
 # Video processing (for perception agent)
 opencv-python>=4.8.0
 numpy>=1.24.0

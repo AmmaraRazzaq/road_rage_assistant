@@ -291,7 +291,17 @@ def process_chunk_uploaded(myfile, chunk_index: int, start_minutes: int) -> dict
     return result
 
 
-def main():
+def main(video_file=None, output_file=None):
+    """
+    Main function to process video for road rage detection.
+    
+    Args:
+        video_file: Path to video file (defaults to VIDEO_FILE constant)
+        output_file: Path to output JSON file (defaults to OUTPUT_FILE constant)
+    """
+    video_path = video_file or VIDEO_FILE
+    output_path = output_file or OUTPUT_FILE
+    
     all_incidents = []
     analysis_metadata = None
     all_summaries = []
@@ -299,7 +309,7 @@ def main():
     # Check if we should split the video
     result = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration", 
-         "-of", "default=noprint_wrappers=1:nokey=1", VIDEO_FILE],
+         "-of", "default=noprint_wrappers=1:nokey=1", video_path],
         capture_output=True, text=True
     )
     total_duration_min = float(result.stdout.strip()) / 60
@@ -307,7 +317,7 @@ def main():
     
     if total_duration_min > 15:  # Split videos longer than 15 minutes
         print(f"Video is {total_duration_min:.1f} minutes - splitting into chunks...")
-        chunk_files = split_video_into_chunks(VIDEO_FILE, CHUNK_DURATION_MINUTES, CHUNKS_DIR)
+        chunk_files = split_video_into_chunks(video_path, CHUNK_DURATION_MINUTES, CHUNKS_DIR)
         
         for i, chunk_file in enumerate(chunk_files):
             print(f"\n--- Processing chunk {i+1}/{len(chunk_files)} ---")
@@ -361,13 +371,13 @@ def main():
         # Process single file for shorter videos
         print(f"Video is {total_duration_min:.1f} minutes - processing as single file...")
         
-        file_size_mb = os.path.getsize(VIDEO_FILE) / (1024 * 1024)
+        file_size_mb = os.path.getsize(video_path) / (1024 * 1024)
         
         if file_size_mb < MAX_INLINE_SIZE_MB:
             # Use inline upload with FPS metadata
             print(f"Using inline upload with FPS={VIDEO_FPS} (file size: {file_size_mb:.1f}MB)")
-            video_bytes = open(VIDEO_FILE, 'rb').read()
-            mime_type = get_mime_type(VIDEO_FILE)
+            video_bytes = open(video_path, 'rb').read()
+            mime_type = get_mime_type(video_path)
             
             content = types.Content(
                 parts=[
@@ -398,7 +408,7 @@ def main():
         else:
             # Use file upload for larger files
             print(f"Using file upload (file size: {file_size_mb:.1f}MB > {MAX_INLINE_SIZE_MB}MB)")
-            myfile = upload_and_wait(VIDEO_FILE)
+            myfile = upload_and_wait(video_path)
             
             tokens = client.models.count_tokens(
                 model=MODEL, contents=[perception_prompt, myfile]
@@ -454,17 +464,25 @@ def main():
     }
     
     # Create output directory if it doesn't exist
-    os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
     # Save combined response to json file
-    with open(OUTPUT_FILE, "w") as f:
+    with open(output_path, "w") as f:
         json.dump(final_result, f, indent=2)
     
     print(f"\n=== Complete ===")
     print(f"Total incidents detected: {len(all_incidents)}")
     print(f"Overall threat level: {overall_threat}")
-    print(f"Results saved to: {OUTPUT_FILE}")
+    print(f"Results saved to: {output_path}")
+    
+    return final_result
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    
+    # Parse command-line arguments
+    video_file = sys.argv[1] if len(sys.argv) > 1 else None
+    output_file = sys.argv[2] if len(sys.argv) > 2 else None
+    
+    main(video_file, output_file)

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Rage Detection Pipeline</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚗 Road Rage Detection Pipeline</h1>
+            <p class="subtitle">AI-powered dashcam analysis with real-time safety guidance</p>
+        </header>
+
+        <!-- Upload Section -->
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-box">
+                <div class="upload-icon">📹</div>
+                <h2>Upload Dashcam Video</h2>
+                <p>Upload a video file to analyze for road rage incidents</p>
+                
+                <form id="uploadForm">
+                    <input type="file" id="videoInput" accept="video/*" required>
+                    <label for="videoInput" class="file-label">
+                        <span id="fileName">Choose video file</span>
+                    </label>
+                    
+                    <div class="voice-selector">
+                        <label for="voiceSelect">Audio Voice:</label>
+                        <select id="voiceSelect" name="voice">
+                            <option value="Puck">Puck (Clear Male)</option>
+                            <option value="Aoede">Aoede (Clear Female)</option>
+                            <option value="Kore" selected>Kore (Professional Female)</option>
+                            <option value="Charon">Charon (Deep Male)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="uploadBtn">
+                        Start Analysis
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Processing Section -->
+        <div class="processing-section hidden" id="processingSection">
+            <div class="status-header">
+                <h2>Processing Video</h2>
+                <div class="status-badge" id="statusBadge">Initializing...</div>
+            </div>
+            
+            <!-- Progress Steps -->
+            <div class="progress-steps">
+                <div class="step" data-step="perception">
+                    <div class="step-icon">🔍</div>
+                    <div class="step-content">
+                        <h3>Perception Agent</h3>
+                        <p>Analyzing video for road rage incidents</p>
+                        <div class="step-status">Pending</div>
+                    </div>
+                </div>
+                
+                <div class="step" data-step="deescalation">
+                    <div class="step-icon">🎙️</div>
+                    <div class="step-content">
+                        <h3>De-escalation Agent</h3>
+                        <p>Generating real-time safety guidance</p>
+                        <div class="step-status">Pending</div>
+                    </div>
+                </div>
+                
+                <div class="step" data-step="report">
+                    <div class="step-icon">📋</div>
+                    <div class="step-content">
+                        <h3>Post-Incident Report</h3>
+                        <p>Creating comprehensive analysis</p>
+                        <div class="step-status">Pending</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Log -->
+            <div class="activity-log">
+                <h3>Activity Log</h3>
+                <div id="activityFeed"></div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section hidden" id="resultsSection">
+            <h2>Analysis Results</h2>
+            
+            <!-- Perception Results -->
+            <div class="result-card" id="perceptionResults">
+                <div class="card-header">
+                    <h3>🔍 Threat Assessment</h3>
+                </div>
+                <div class="card-body">
+                    <div class="threat-overview">
+                        <div class="metric">
+                            <span class="metric-label">Total Incidents</span>
+                            <span class="metric-value" id="totalIncidents">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Overall Threat Level</span>
+                            <span class="metric-value threat-badge" id="overallThreat">-</span>
+                        </div>
+                    </div>
+                    <div id="incidentsList"></div>
+                </div>
+            </div>
+            
+            <!-- De-escalation Results -->
+            <div class="result-card" id="deescalationResults">
+                <div class="card-header">
+                    <h3>🎙️ Safety Guidance</h3>
+                </div>
+                <div class="card-body">
+                    <div id="guidanceList"></div>
+                </div>
+            </div>
+            
+            <!-- Report Results -->
+            <div class="result-card" id="reportResults">
+                <div class="card-header">
+                    <h3>📋 Post-Incident Report</h3>
+                </div>
+                <div class="card-body">
+                    <div id="reportFiles"></div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="resetInterface()">
+                    Analyze Another Video
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

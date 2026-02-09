@@ -72,7 +72,7 @@ class RoadRagePipeline:
         Step 1: Run perception agent to analyze video and detect threats.
         
         Args:
-            video_file: Path to video file. If None, runs gemini_fact_extraction.py
+            video_file: Path to video file. If None, runs gemini_fact_extraction.py with default video
         
         Returns:
             Dictionary containing perception analysis results
@@ -86,12 +86,22 @@ class RoadRagePipeline:
         
         perception_script = self.base_path / "src" / "gemini_fact_extraction.py"
         
+        # Prepare perception output path
+        perception_file = self.output_base / "gemini-2.5-flash_road_rage_analysis_fps1.json"
+        
         print(f"Running perception agent: {perception_script}")
+        if video_file:
+            print(f"Video file: {video_file}")
         print("This may take several minutes depending on video length...")
         
         try:
+            # Build command with video file and output file arguments
+            cmd = ["python", str(perception_script)]
+            if video_file:
+                cmd.extend([str(video_file), str(perception_file)])
+            
             result = subprocess.run(
-                ["python", str(perception_script)],
+                cmd,
                 capture_output=True,
                 text=True,
                 cwd=str(self.base_path)
@@ -103,10 +113,6 @@ class RoadRagePipeline:
                 raise RuntimeError("Perception agent failed")
             
             print(result.stdout)
-            
-            # Load the generated perception output
-            # The perception agent saves to results/gemini-2.5-flash_road_rage_analysis_fps1.json
-            perception_file = self.output_base / "gemini-2.5-flash_road_rage_analysis_fps1.json"
             
             if not perception_file.exists():
                 raise FileNotFoundError(f"Perception output not found at {perception_file}")

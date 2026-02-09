@@ -1,3 +1,13 @@
 data/
 results/
 docs/
+uploads/
+__pycache__/
+*.pyc
+.env
+*.wav
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
