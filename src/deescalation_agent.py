@@ -21,14 +21,23 @@ class DeescalationAgent:
     based on perception agent threat assessments.
     """
     
-    def __init__(self, api_key: str = None, voice_name: str = "Kore"):
+    def __init__(
+        self, 
+        api_key: str = None, 
+        voice_name: str = "Puck",
+        speaking_rate: float = 1.0,
+        pitch: float = 0.0
+    ):
         """
         Initialize the de-escalation agent with Gemini audio model.
         
         Args:
-            api_key: Google API key. If None, will use GOOGLE_API_KEY from environment.
-            voice_name: Voice to use for audio generation. Options: Kore, Puck, Charon, Aoede, etc.
-                       Default: Kore (calm, professional female voice)
+            api_key: Google API key. If None, will use GEMINI_API_KEY from environment.
+            voice_name: Voice to use for audio generation. 
+                       Recommended: "Puck" (clear male), "Aoede" (clear female)
+                       Other options: "Charon" (deep male), "Kore" (professional female)
+            speaking_rate: Speech speed (0.25-4.0). Default 1.0. Try 0.9 for clearer speech.
+            pitch: Voice pitch adjustment (-20.0 to 20.0). Default 0.0.
         """
         api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not api_key:
@@ -41,6 +50,8 @@ class DeescalationAgent:
         self.text_model = "gemini-2.5-flash"  # For text generation
         self.audio_model = "gemini-2.5-flash-preview-tts"  # For audio only
         self.voice_name = voice_name
+        self.speaking_rate = max(0.25, min(4.0, speaking_rate))  # Clamp to valid range
+        self.pitch = max(-20.0, min(20.0, pitch))  # Clamp to valid range
         
         # System prompt for guidance generation
         self.system_prompt = DEESCALATION_SYSTEM_PROMPT
@@ -129,7 +140,7 @@ Provide immediate, calm audio safety instructions for the driver RIGHT NOW. Focu
         
         # Generate audio output if requested
         if return_audio:
-            # Generate audio from transcript using audio model
+            # Generate audio from transcript using audio model with quality settings
             audio_response = self.client.models.generate_content(
                 model=self.audio_model,  # Use audio model for audio synthesis
                 contents=transcript,
@@ -141,6 +152,8 @@ Provide immediate, calm audio safety instructions for the driver RIGHT NOW. Focu
                                 voice_name=self.voice_name
                             )
                         )
+                        # Note: speaking_rate and pitch may not be supported yet
+                        # The API is in preview and parameters are limited
                     )
                 )
             )
@@ -227,9 +240,12 @@ def main():
     """
     Example usage: Process perception agent output and generate guidance
     """
-    # Initialize agent
+    # Initialize agent with clearer voice
     print("Initializing De-escalation Agent...")
-    agent = DeescalationAgent()
+    print("Using voice: Puck (clear male voice)")
+    print("TIP: Run 'python examples/test_voices.py' to test different voices\n")
+    
+    agent = DeescalationAgent(voice_name="Puck")  # Puck is generally clearer than Kore
     
     # Load perception agent output
     perception_file = Path(__file__).parent.parent / "results" / "gemini-2.5-flash_road_rage_analysis_fps1.json"

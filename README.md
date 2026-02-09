@@ -15,7 +15,8 @@ Proof of concept for detecting road rage from dashcam footage using Gemini Flash
 - Provides calm, actionable instructions to drivers
 - Real-time de-escalation protocols
 - Model: `gemini-2.5-flash-preview-tts`
-- Voice options: Kore (default), Puck, Charon, Aoede
+- Voice options: **Puck** (recommended), Aoede, Charon, Kore
+- Audio quality: See [Audio Quality Guide](docs/AUDIO_QUALITY_GUIDE.md)
 
 ## Quick Start
 
@@ -47,6 +48,7 @@ python src/deescalation_agent.py
 ## Documentation
 
 - [De-escalation Agent Guide](docs/DEESCALATION_AGENT.md) - Comprehensive usage and system prompt documentation
+- [Audio Quality Guide](docs/AUDIO_QUALITY_GUIDE.md) - Fix unclear audio, test voices ⭐
 - [System Prompt Design](docs/SYSTEM_PROMPT_DESIGN.md) - Design philosophy and principles
 - [API Migration Guide](docs/API_MIGRATION.md) - New Google Genai API changes
 - [Quick Start](QUICKSTART.md) - 5-minute setup guide
