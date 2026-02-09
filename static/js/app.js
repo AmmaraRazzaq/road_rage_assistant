@@ -263,26 +263,188 @@ function addGuidanceResult(data) {
 }
 
 // Display report results
-function displayReportResults(data) {
+async function displayReportResults(data) {
     const reportFiles = document.getElementById('reportFiles');
-    reportFiles.innerHTML = '';
+    reportFiles.innerHTML = '<div class="loading">Loading report...</div>';
     
-    Object.entries(data.files).forEach(([type, path]) => {
-        const fileDiv = document.createElement('div');
-        fileDiv.className = 'report-file';
+    try {
+        // Fetch the full report content
+        const response = await fetch(`/report/${currentJobId}`);
+        if (!response.ok) throw new Error('Failed to fetch report');
         
-        const filename = path.split('/').pop();
-        const relativePath = path.split(currentJobId + '/')[1];
+        const reportData = await response.json();
         
-        fileDiv.innerHTML = `
-            <span class="file-name">${type}: ${filename}</span>
-            <a href="/download/${currentJobId}/${relativePath}" class="download-btn" download>
-                Download
-            </a>
+        console.log('Report data received:', reportData); // Debug log
+        
+        // Check if sections exist, otherwise show a message
+        const hasSummary = reportData.summary && reportData.summary.trim().length > 0;
+        const hasTimeline = reportData.timeline && reportData.timeline.trim().length > 0;
+        const hasPoliceReport = reportData.police_report && reportData.police_report.trim().length > 0;
+        
+        // Display the full report in formatted sections
+        reportFiles.innerHTML = `
+            <div class="report-content">
+                ${hasSummary ? `
+                <div class="report-section">
+                    <div class="report-section-header clickable" onclick="toggleSection(this)">
+                        <h3>📄 Incident Summary</h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="report-section-body">
+                        <pre class="report-text">${escapeHtml(reportData.summary)}</pre>
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${hasTimeline ? `
+                <div class="report-section">
+                    <div class="report-section-header clickable" onclick="toggleSection(this)">
+                        <h3>⏱️ Timeline of Events</h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="report-section-body">
+                        <pre class="report-text">${escapeHtml(reportData.timeline)}</pre>
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${hasPoliceReport ? `
+                <div class="report-section">
+                    <div class="report-section-header clickable" onclick="toggleSection(this)">
+                        <h3>🚔 Police Ready Report</h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="report-section-body">
+                        <pre class="report-text">${escapeHtml(reportData.police_report)}</pre>
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${!hasSummary && !hasTimeline && !hasPoliceReport ? `
+                <div class="error-message">
+                    <p>Report sections not found. Displaying full report instead.</p>
+                </div>
+                <div class="report-section">
+                    <div class="report-section-header">
+                        <h3>📋 Complete Report</h3>
+                    </div>
+                    <div class="report-section-body">
+                        <pre class="report-text">${escapeHtml(reportData.full_content || 'No report content available')}</pre>
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div class="report-actions">
+                    <button class="btn btn-primary" onclick="downloadFullReport()">
+                        📥 Download Complete Report
+                    </button>
+                    <button class="btn btn-secondary" onclick="printReport()">
+                        🖨️ Print Report
+                    </button>
+                </div>
+            </div>
         `;
-        
-        reportFiles.appendChild(fileDiv);
-    });
+    } catch (error) {
+        console.error('Error fetching report:', error);
+        reportFiles.innerHTML = `
+            <div class="error-message">
+                Failed to load report content. Please try downloading the files instead.
+            </div>
+            <div class="report-actions">
+                ${Object.entries(data.files).map(([type, path]) => {
+                    const filename = path.split('/').pop();
+                    const relativePath = path.split(currentJobId + '/')[1];
+                    return `
+                        <a href="/download/${currentJobId}/${relativePath}" class="btn btn-secondary" download>
+                            Download ${type}
+                        </a>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+}
+
+// Toggle report section
+function toggleSection(header) {
+    const section = header.parentElement;
+    const body = section.querySelector('.report-section-body');
+    const icon = header.querySelector('.toggle-icon');
+    
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        icon.textContent = '▼';
+        section.classList.remove('collapsed');
+    } else {
+        body.style.display = 'none';
+        icon.textContent = '▶';
+        section.classList.add('collapsed');
+    }
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Download full report
+function downloadFullReport() {
+    if (currentJobId) {
+        window.location.href = `/download/${currentJobId}/reports/incident_report.txt`;
+    }
+}
+
+// Print report
+function printReport() {
+    const reportContent = document.querySelector('.report-content');
+    if (reportContent) {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Road Rage Incident Report</title>
+                <style>
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                        padding: 2rem;
+                        max-width: 900px;
+                        margin: 0 auto;
+                        line-height: 1.6;
+                    }
+                    h3 {
+                        color: #1e293b;
+                        border-bottom: 2px solid #3b82f6;
+                        padding-bottom: 0.5rem;
+                        margin-top: 2rem;
+                    }
+                    pre {
+                        white-space: pre-wrap;
+                        word-wrap: break-word;
+                        background: #f8fafc;
+                        padding: 1rem;
+                        border-radius: 6px;
+                        font-size: 0.9rem;
+                    }
+                    @media print {
+                        body { padding: 0; }
+                        h3 { page-break-after: avoid; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Road Rage Incident Report</h1>
+                <p><em>Generated: ${new Date().toLocaleString()}</em></p>
+                ${reportContent.innerHTML}
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        setTimeout(() => {
+            printWindow.print();
+        }, 250);
+    }
 }
 
 // Reset interface to upload new video

@@ -454,7 +454,103 @@ input[type="file"] {
     margin-top: 0.5rem;
 }
 
-/* Report Files */
+/* Report Content */
+.report-content {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.report-section {
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.report-section:last-of-type {
+    border-bottom: none;
+}
+
+.report-section-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1rem 1.5rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.report-section-header.clickable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.report-section-header.clickable:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a3f90 100%);
+}
+
+.report-section-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.toggle-icon {
+    font-size: 0.9rem;
+    transition: transform 0.3s ease;
+}
+
+.report-section.collapsed .report-section-body {
+    display: none;
+}
+
+.report-section-body {
+    padding: 1.5rem;
+    background: #f8fafc;
+}
+
+.report-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+    margin: 0;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.report-actions {
+    padding: 1.5rem;
+    background: white;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+/* Report Files (fallback) */
 .report-file {
     background: white;
     padding: 1rem;
@@ -482,6 +578,21 @@ input[type="file"] {
 
 .download-btn:hover {
     background: #2563eb;
+}
+
+/* Scrollbar for report text */
+.report-text::-webkit-scrollbar {
+    width: 8px;
+}
+
+.report-text::-webkit-scrollbar-track {
+    background: #e2e8f0;
+    border-radius: 4px;
+}
+
+.report-text::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
 }
 
 /* Action Buttons */
@@ -526,5 +637,32 @@ input[type="file"] {
     
     .threat-overview {
         grid-template-columns: 1fr;
+    }
+    
+    .report-text {
+        font-size: 0.8rem;
+        padding: 1rem;
+        max-height: 300px;
+    }
+    
+    .report-section-body {
+        padding: 1rem;
+    }
+    
+    .report-section-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .report-section-header h3 {
+        font-size: 1rem;
+    }
+    
+    .report-actions {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    
+    .report-actions .btn {
+        width: 100%;
     }
 }

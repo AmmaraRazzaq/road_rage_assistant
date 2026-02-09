@@ -354,6 +354,57 @@ def get_results(job_id):
     })
 
 
+@app.route('/report/<job_id>')
+def get_report_content(job_id):
+    """Get the formatted report content"""
+    if job_id not in active_jobs:
+        return jsonify({'error': 'Job not found'}), 404
+    
+    job = active_jobs[job_id]
+    
+    if not job.report:
+        return jsonify({'error': 'Report not yet generated'}), 400
+    
+    # Read individual section files
+    reports_dir = app.config['RESULTS_FOLDER'] / job_id / 'reports'
+    
+    # Read summary
+    summary = ''
+    summary_file = reports_dir / 'incident_report_summary.txt'
+    if summary_file.exists():
+        with open(summary_file, 'r') as f:
+            summary = f.read()
+    
+    # Read timeline
+    timeline = ''
+    timeline_file = reports_dir / 'incident_report_timeline.txt'
+    if timeline_file.exists():
+        with open(timeline_file, 'r') as f:
+            timeline = f.read()
+    
+    # Read police report
+    police_report = ''
+    police_file = reports_dir / 'incident_report_police_report.txt'
+    if police_file.exists():
+        with open(police_file, 'r') as f:
+            police_report = f.read()
+    
+    # Read full report as fallback
+    full_report = ''
+    report_file = reports_dir / 'incident_report.txt'
+    if report_file.exists():
+        with open(report_file, 'r') as f:
+            full_report = f.read()
+    
+    return jsonify({
+        'full_content': full_report,
+        'generated_at': job.report['content'].get('generated_at', '') if 'content' in job.report else '',
+        'summary': summary,
+        'timeline': timeline,
+        'police_report': police_report
+    })
+
+
 @app.route('/download/<job_id>/<path:filename>')
 def download_file(job_id, filename):
     """Download a result file"""
