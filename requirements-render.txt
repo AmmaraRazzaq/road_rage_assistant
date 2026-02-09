@@ -1,0 +1,15 @@
+# Core dependencies
+google-genai>=1.0.0
+python-dotenv>=1.0.0
+
+# Web framework
+Flask>=3.0.0
+gunicorn>=21.0.0
+werkzeug>=3.0.0
+
+# Video processing (headless version for servers)
+opencv-python-headless>=4.8.0
+numpy>=1.24.0
+
+# System packages (Render should have these)
+# ffmpeg is available on Render by default

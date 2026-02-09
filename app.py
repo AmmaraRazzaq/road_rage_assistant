@@ -439,6 +439,9 @@ if __name__ == '__main__':
     print("=" * 80)
     print("Road Rage Detection Pipeline - Web Interface")
     print("=" * 80)
-    print("Starting server on http://localhost:5000")
+    # Get port from environment variable (for deployment platforms)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('DEBUG', 'False').lower() == 'true'
+    print(f"Starting server on http://0.0.0.0:{port}")
     print("=" * 80)
-    app.run(debug=True, threaded=True, host='0.0.0.0', port=5000)
+    app.run(debug=debug, threaded=True, host='0.0.0.0', port=port)

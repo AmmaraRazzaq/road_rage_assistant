@@ -1,8 +1,7 @@
 services:
   - type: web
     name: road-rage-detection
-    env: python
-    region: oregon
+    runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 600
@@ -10,4 +9,4 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: PYTHON_VERSION
-        value: 3.10.0
+        value: "3.10"
