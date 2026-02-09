@@ -318,6 +318,11 @@ def main():
                 print("-" * 60)
                 print(guidance['text'])
                 print("-" * 60)
+
+                # save text in a file 
+                with open(Path(__file__).parent.parent / "results" / "audio" / f"incident_{incident_id}_guidance.txt", "w") as f:
+                    f.write(guidance['text'])
+                
             
             # Save audio if available
             if 'audio' in guidance:
