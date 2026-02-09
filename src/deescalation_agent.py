@@ -5,6 +5,7 @@ Generates real-time audio safety guidance based on perception agent output
 
 import os
 import json
+import wave
 from google import genai
 from google.genai import types
 from pathlib import Path
@@ -13,6 +14,24 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+
+def wave_file(filename, pcm, channels=1, rate=24000, sample_width=2):
+    """
+    Save PCM audio data as a WAV file with proper formatting.
+    
+    Args:
+        filename: Output WAV file path
+        pcm: Raw PCM audio data (bytes)
+        channels: Number of audio channels (1=mono, 2=stereo)
+        rate: Sample rate in Hz (default 24000 for Gemini TTS)
+        sample_width: Sample width in bytes (2=16-bit audio)
+    """
+    with wave.open(filename, "wb") as wf:
+        wf.setnchannels(channels)
+        wf.setsampwidth(sample_width)
+        wf.setframerate(rate)
+        wf.writeframes(pcm)
 
 
 class DeescalationAgent:
@@ -49,7 +68,7 @@ class DeescalationAgent:
         # Model configuration
         self.text_model = "gemini-2.5-flash"  # For text generation
         self.audio_model = "gemini-2.5-flash-preview-tts"  # For audio only
-        self.voice_name = voice_name
+        self.voice_name = 'Kore'
         self.speaking_rate = max(0.25, min(4.0, speaking_rate))  # Clamp to valid range
         self.pitch = max(-20.0, min(20.0, pitch))  # Clamp to valid range
         
@@ -60,7 +79,7 @@ class DeescalationAgent:
         self.temperature = 0.3      # Lower for consistent, measured responses
         self.top_p = 0.8
         self.top_k = 40
-        self.max_output_tokens = 200  # Keep audio instructions short and actionable
+        self.max_output_tokens = 4000  # Keep audio instructions short and actionable
     
     def generate_guidance(
         self, 
@@ -94,30 +113,26 @@ class DeescalationAgent:
             
             user_prompt = f"""Immediate situation requiring guidance:
 
-Threat Level: {incident['threat_level']}
-Threat Type: {incident['threat_type']}
-Time: {incident['start_time']} to {incident['end_time']}
+                Threat Level: {incident['threat_level']}
+                Threat Type: {incident['threat_type']}
+                Time: {incident['start_time']} to {incident['end_time']}
 
-Visual: {incident['visual_observations']['description']}
+                Visual: {incident['visual_observations']['description']}
 
-Audio Indicators: {json.dumps(incident.get('audio_observations', {}), indent=2)}
+                Audio Indicators: {json.dumps(incident.get('audio_observations', {}), indent=2)}
 
-Recommended Action: {incident['recommended_action']}
+                Recommended Action: {incident['recommended_action']}
 
-Provide immediate, calm audio safety instructions for the driver RIGHT NOW."""
+                Provide immediate, calm audio safety instructions for the driver RIGHT NOW."""
         
         else:
             # Address overall situation
             user_prompt = f"""Road rage threat assessment requiring immediate guidance:
 
-Overall Threat Level: {perception_output['analysis_metadata']['overall_threat_level']}
-Total Incidents: {perception_output['summary']['total_incidents']}
-Primary Threats: {', '.join(perception_output['summary']['primary_threats'])}
+                Incidents:
+                {json.dumps(perception_output['incidents'], indent=2)}
 
-Incidents:
-{json.dumps(perception_output['incidents'], indent=2)}
-
-Provide immediate, calm audio safety instructions for the driver RIGHT NOW. Focus on the most critical threats first."""
+                Provide immediate, calm audio safety instructions for the driver RIGHT NOW. Focus on the most critical threats first."""
         
         result = {}
         
@@ -134,6 +149,7 @@ Provide immediate, calm audio safety instructions for the driver RIGHT NOW. Focu
                 )
             )
             transcript = text_response.text
+            print("Transcript: ", transcript)
             
             if return_text:
                 result['text'] = transcript
@@ -198,14 +214,20 @@ Provide immediate, calm audio safety instructions for the driver RIGHT NOW. Focu
     def save_guidance_audio(
         self,
         guidance: dict,
-        output_path: str
+        output_path: str,
+        channels: int = 1,
+        rate: int = 24000,
+        sample_width: int = 2
     ) -> str:
         """
-        Save generated audio guidance to file.
+        Save generated audio guidance to WAV file with proper formatting.
         
         Args:
             guidance: Output from generate_guidance()
-            output_path: Path to save audio file (should end with appropriate extension)
+            output_path: Path to save audio file (will be saved as .wav)
+            channels: Number of audio channels (1=mono, 2=stereo). Default: 1
+            rate: Sample rate in Hz. Default: 24000 (Gemini TTS default)
+            sample_width: Sample width in bytes (2=16-bit). Default: 2
         
         Returns:
             Path to saved audio file
@@ -217,20 +239,12 @@ Provide immediate, calm audio safety instructions for the driver RIGHT NOW. Focu
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
         
-        # Auto-detect extension based on mime type if not provided
-        if not output_file.suffix and 'audio_mime_type' in guidance:
-            mime_to_ext = {
-                'audio/wav': '.wav',
-                'audio/mp3': '.mp3',
-                'audio/mpeg': '.mp3',
-                'audio/ogg': '.ogg'
-            }
-            ext = mime_to_ext.get(guidance['audio_mime_type'], '.wav')
-            output_path = str(output_file) + ext
+        # Ensure .wav extension
+        if output_file.suffix != '.wav':
+            output_path = str(output_file.with_suffix('.wav'))
         
-        # Save audio to file
-        with open(output_path, 'wb') as f:
-            f.write(guidance['audio'])
+        # Save audio using wave module for proper WAV formatting
+        wave_file(output_path, guidance['audio'], channels, rate, sample_width)
         
         print(f"Audio guidance saved to: {output_path}")
         return output_path
@@ -262,22 +276,22 @@ def main():
     print("\n" + "=" * 60)
     
     # Generate overall guidance
-    print("\n[GENERATING OVERALL SAFETY GUIDANCE]\n")
-    try:
-        overall_guidance = agent.generate_guidance(
-            perception_output,
-            return_audio=False,  # Skip audio for faster demo
-            return_text=True     # Get text guidance
-        )
+    # print("\n[GENERATING OVERALL SAFETY GUIDANCE]\n")
+    # try:
+    #     overall_guidance = agent.generate_guidance(
+    #         perception_output,
+    #         return_audio=False,  # Skip audio for faster demo
+    #         return_text=True     # Get text guidance
+    #     )
         
-        if 'text' in overall_guidance:
-            print("Audio Transcript:")
-            print("-" * 60)
-            print(overall_guidance['text'])
-            print("-" * 60)
-    except Exception as e:
-        print(f"Error generating guidance: {e}")
-        print("Note: Audio generation requires proper API access and model availability")
+    #     if 'text' in overall_guidance:
+    #         print("Audio Transcript:")
+    #         print("-" * 60)
+    #         print(overall_guidance['text'])
+    #         print("-" * 60)
+    # except Exception as e:
+    #     print(f"Error generating guidance: {e}")
+    #     print("Note: Audio generation requires proper API access and model availability")
     
     # Generate incident-specific guidance
     print("\n" + "=" * 60)
