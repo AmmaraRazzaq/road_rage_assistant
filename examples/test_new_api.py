@@ -59,7 +59,7 @@ A driver is experiencing a road rage incident where someone is approaching their
 Provide 2-3 sentences of calm safety guidance."""
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash-preview-tts",
+        model="gemini-2.5-flash",  # Use standard flash model for text
         contents=test_prompt,
         config=types.GenerateContentConfig(
             temperature=0.3,
@@ -146,12 +146,14 @@ print("=" * 70)
 
 try:
     print("Attempting to generate audio output...")
+    print("Note: Using TTS model with AUDIO modality (text-to-speech synthesis)")
     
+    # TTS model only accepts AUDIO modality
     audio_response = client.models.generate_content(
-        model="gemini-2.5-flash-preview-tts",
+        model="gemini-2.5-flash-preview-tts",  # TTS model
         contents="Lock your doors now. Stay inside your vehicle. Do not engage.",
         config=types.GenerateContentConfig(
-            response_modalities=["AUDIO"],
+            response_modalities=["AUDIO"],  # TTS model ONLY accepts AUDIO
             speech_config=types.SpeechConfig(
                 voice_config=types.VoiceConfig(
                     prebuilt_voice_config=types.PrebuiltVoiceConfig(
@@ -200,8 +202,10 @@ print("""
 Key Takeaways:
 - New API uses: from google import genai
 - Client-based: client = genai.Client(api_key=...)
-- Generate content: client.models.generate_content(model=..., contents=..., config=...)
-- Audio config: Use response_modalities=["AUDIO"] with speech_config
+- Two models needed:
+  * gemini-2.5-flash for text generation (TEXT modality)
+  * gemini-2.5-flash-preview-tts for audio synthesis (AUDIO modality only)
+- TTS model ONLY accepts response_modalities=["AUDIO"]
 - Voice options: Kore, Puck, Charon, Aoede, etc.
 
 If all tests passed, your de-escalation agent is ready to use!

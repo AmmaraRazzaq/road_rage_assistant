@@ -144,9 +144,9 @@ user_prompt = f'''Based on this road rage threat assessment, provide immediate a
 
 Generate calm, clear audio instructions for the driver right now.'''
 
-# Step 1: Generate text transcript with system prompt
+# Step 1: Generate text transcript with system prompt (use standard flash model)
 text_response = client.models.generate_content(
-    model="gemini-2.5-flash-preview-tts",
+    model="gemini-2.5-flash",  # Use standard model for text generation
     contents=f"{DEESCALATION_SYSTEM_PROMPT}\\n\\n{user_prompt}",
     config=types.GenerateContentConfig(
         temperature=0.3,  # Lower temperature for consistent, calm responses
@@ -158,12 +158,12 @@ text_response = client.models.generate_content(
 
 transcript = text_response.text
 
-# Step 2: Generate audio from transcript
+# Step 2: Generate audio from transcript (use TTS model with AUDIO modality)
 audio_response = client.models.generate_content(
-    model="gemini-2.5-flash-preview-tts",
+    model="gemini-2.5-flash-preview-tts",  # TTS model for audio synthesis
     contents=transcript,
     config=types.GenerateContentConfig(
-        response_modalities=["AUDIO"],
+        response_modalities=["AUDIO"],  # TTS model ONLY accepts AUDIO
         speech_config=types.SpeechConfig(
             voice_config=types.VoiceConfig(
                 prebuilt_voice_config=types.PrebuiltVoiceConfig(

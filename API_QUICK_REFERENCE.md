@@ -20,8 +20,9 @@ client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 ## Text Generation
 
 ```python
+# Use gemini-2.5-flash for text generation
 response = client.models.generate_content(
-    model="gemini-2.5-flash-preview-tts",
+    model="gemini-2.5-flash",  # Standard flash model
     contents="Your prompt here",
     config=types.GenerateContentConfig(
         temperature=0.3,
@@ -37,19 +38,19 @@ text = response.text
 ## Audio Generation
 
 ```python
-# Step 1: Generate transcript
+# Step 1: Generate transcript (use standard flash model)
 text_response = client.models.generate_content(
-    model="gemini-2.5-flash-preview-tts",
+    model="gemini-2.5-flash",  # NOT the TTS model
     contents="Generate safety guidance for road rage incident",
     config=types.GenerateContentConfig(temperature=0.3)
 )
 
-# Step 2: Convert to audio
+# Step 2: Convert to audio (use TTS model with AUDIO modality)
 audio_response = client.models.generate_content(
-    model="gemini-2.5-flash-preview-tts",
+    model="gemini-2.5-flash-preview-tts",  # TTS model
     contents=text_response.text,
     config=types.GenerateContentConfig(
-        response_modalities=["AUDIO"],
+        response_modalities=["AUDIO"],  # TTS model ONLY accepts AUDIO
         speech_config=types.SpeechConfig(
             voice_config=types.VoiceConfig(
                 prebuilt_voice_config=types.PrebuiltVoiceConfig(
@@ -136,11 +137,13 @@ config = types.GenerateContentConfig(
 
 ## Model Names
 
-| Model | Purpose |
-|-------|---------|
-| `gemini-2.5-flash-preview-tts` | Text + Audio generation |
-| `gemini-2.5-flash` | Text only (faster) |
-| `gemini-2.5-pro` | More capable (slower) |
+| Model | Purpose | Modalities |
+|-------|---------|------------|
+| `gemini-2.5-flash` | Text generation | TEXT only |
+| `gemini-2.5-flash-preview-tts` | Audio synthesis | AUDIO only (no text output) |
+| `gemini-2.5-pro` | Advanced text generation | TEXT only |
+
+**Important**: The TTS model (`gemini-2.5-flash-preview-tts`) only supports AUDIO output. Always use `gemini-2.5-flash` for text generation first.
 
 ## Error Handling
 

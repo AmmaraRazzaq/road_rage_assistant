@@ -38,7 +38,8 @@ class DeescalationAgent:
         self.client = genai.Client(api_key=api_key)
         
         # Model configuration
-        self.model_name = "gemini-2.5-flash-preview-tts"
+        self.text_model = "gemini-2.5-flash"  # For text generation
+        self.audio_model = "gemini-2.5-flash-preview-tts"  # For audio only
         self.voice_name = voice_name
         
         # System prompt for guidance generation
@@ -109,10 +110,10 @@ Provide immediate, calm audio safety instructions for the driver RIGHT NOW. Focu
         
         result = {}
         
-        # First, generate text transcript with system prompt
-        if return_text:
+        # First, generate text transcript with system prompt using text model
+        if return_text or return_audio:
             text_response = self.client.models.generate_content(
-                model=self.model_name,
+                model=self.text_model,  # Use text model for text generation
                 contents=f"{self.system_prompt}\n\n{user_prompt}",
                 config=types.GenerateContentConfig(
                     temperature=self.temperature,
@@ -121,31 +122,19 @@ Provide immediate, calm audio safety instructions for the driver RIGHT NOW. Focu
                     max_output_tokens=self.max_output_tokens
                 )
             )
-            result['text'] = text_response.text
+            transcript = text_response.text
+            
+            if return_text:
+                result['text'] = transcript
         
         # Generate audio output if requested
         if return_audio:
-            # Use the text we generated or generate it now
-            transcript = result.get('text')
-            if not transcript:
-                text_response = self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=f"{self.system_prompt}\n\n{user_prompt}",
-                    config=types.GenerateContentConfig(
-                        temperature=self.temperature,
-                        top_p=self.top_p,
-                        top_k=self.top_k,
-                        max_output_tokens=self.max_output_tokens
-                    )
-                )
-                transcript = text_response.text
-            
-            # Generate audio from transcript
+            # Generate audio from transcript using audio model
             audio_response = self.client.models.generate_content(
-                model=self.model_name,
+                model=self.audio_model,  # Use audio model for audio synthesis
                 contents=transcript,
                 config=types.GenerateContentConfig(
-                    response_modalities=["AUDIO"],
+                    response_modalities=["AUDIO"],  # TTS model only accepts AUDIO
                     speech_config=types.SpeechConfig(
                         voice_config=types.VoiceConfig(
                             prebuilt_voice_config=types.PrebuiltVoiceConfig(
@@ -261,8 +250,8 @@ def main():
     try:
         overall_guidance = agent.generate_guidance(
             perception_output,
-            return_audio=False,  # Text only for demo
-            return_text=True
+            return_audio=False,  # Skip audio for faster demo
+            return_text=True     # Get text guidance
         )
         
         if 'text' in overall_guidance:
